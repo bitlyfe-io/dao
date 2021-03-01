@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
 
-import "Uniswap.sol";
-import "SafeMath.sol";
-import "Address.sol";
+import "./Pangolin.sol";
+import "./SafeMath.sol";
+import "./Address.sol";
 
 /**
  * @title SafeERC20

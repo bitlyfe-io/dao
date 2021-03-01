@@ -209,7 +209,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "burnBAEXtoERC20",
+		"name": "burnBitLyfetoERC20",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -365,7 +365,7 @@
 				"type": "address"
 			}
 		],
-		"name": "issueBAEXvsERC20",
+		"name": "issueBitLyfevsERC20",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -541,11 +541,11 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_uniswapRouter",
+				"name": "_pangolinRouter",
 				"type": "address"
 			}
 		],
-		"name": "setUniswapRouter",
+		"name": "setpangolinRouter",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
