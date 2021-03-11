@@ -121,9 +121,10 @@ abstract contract LinkedToStableCoins {
     uint256 constant public fmkd = 8;
     uint256 constant public fmk = 10**fmkd;
     uint256 constant internal _decimals = 8;
-    address constant internal super_owner = 0x97fB5D214367463a13659742D4ACBa82E8D4Bb43;
+    address constant internal super_owner = 0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f;
     address internal owner;
     
+	address public wavaxContract = 0xd00ae08403B9bbb9124bB305C09058E32C39A48c;
     address public usdtContract;
 	address public daiContract;
 	
@@ -215,6 +216,10 @@ abstract contract LinkedToStableCoins {
 	function setDAIContract(address _daiContract) public onlyOwner {
 		daiContract = _daiContract;
 	}
+
+	function setTrueUSDContract(address _trueUSDContract) public onlyOwner {
+		trueUSDContract = _trueUSDContract;
+	}
 	
 	function transferOwnership(address newOwner) public onlyOwner {
 		require(newOwner != address(0));
@@ -236,9 +241,11 @@ abstract contract LinkedToStableCoins {
 contract BitLyfe is LinkedToStableCoins, StandardToken {
     // Burn price ratio is 0.9
     uint256 constant burn_ratio = 9 * fmk / 10;
-    // Burning fee is 5%
+    
+	// Burning fee is 5%
     uint256 constant burn_fee = 5 * fmk / 100;
-    // Issuing price increase ratio vs locked_amount/supply is 14 %
+    
+	// Issuing price increase ratio vs locked_amount/supply is 14 %
     uint256 public issue_increase_ratio = 14 * fmk / 100;
     
 	string public name;
@@ -271,7 +278,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     */
 	constructor() public {
 		name = "BitLyfe";
-		symbol = "BitLyfe";
+		symbol = "BitLyfe DAO";
 		decimals = _decimals;
 		
 		owner = msg.sender;		
@@ -284,10 +291,12 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		issue_price = 10000000 * fmk;
 		
 		// USDT token contract address
-		usdtContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
+		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
 		// DAI token contract address
 		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
-		// Uniswap V2 Router
+		// TrueUSD token contract address
+		trueUSDContract = 0x1C20E891Bab6b1727d14Da358FAe2984Ed9B59EB
+		// Pangolin V2 Router
 		pangolinRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;		
 	}
 	
@@ -300,7 +309,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	}
 
 	/**
-    * @dev ERC20 transfer with burning of BAEX when it will be sent to the BAEX smart-contract
+    * @dev ERC20 transfer with burning of BitLyfe when it will be sent to the BitLyfe smart-contract
     * @dev and with the placing liquidity to the protocol address the collected sum will be used to buy-back BitLyfe Tokens.
     */
 	function transfer(address _to, uint256 _value) public override returns (bool) {
@@ -325,9 +334,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	    }
 		if (res) {
 		    if (_to == address(this)) {
-                burnBitLyfe( _from, _value );
-    		} else {
-				super.transfer(protocolWallet, _value);
+                burnBitLyfe( _from, _value);
     		}
     		return true;
 		}
@@ -365,9 +372,9 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	    if ( address(bonusProgramContract) != address(0) ) {
 	        uint256 to_bonus_amount = BitLyfeonIssue(bonusProgramContract).onIssueTokens( _to_address, _partner, tokens_to_issue, issue_price, tokenAmountToFixedAmount(_token_contract,_asset_amount) );
 	        if (to_bonus_amount > 0) {
-	            if ( ( _token_contract == usdtContract ) || ( balanceOfOtherERC20(usdtContract) >= to_bonus_amount ) ) {
+	            if ( ( _token_contract == usdtContract ) && ( balanceOfOtherERC20(usdtContract) >= to_bonus_amount ) ) {
 	                transferOtherERC20( usdtContract, address(this), bonusProgramContract, to_bonus_amount );
-	            } else {
+	            } else if ( ( _token_contract == daiContract ) && ( balanceOfOtherERC20(daiContract) >= to_bonus_amount ) ) {
 	                transferOtherERC20( daiContract, address(this), bonusProgramContract, to_bonus_amount );
 	            }
 	        }
@@ -547,9 +554,9 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
 		name = "Assets Balancer Contract";
 		owner = msg.sender;
 		
-		pangolinRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-		usdtContract = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-		daiContract = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+		pangolinRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
+		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
 
         // Store 20% of collateral in USDT
 		usdt_percent = fmk * 20 / 100;
@@ -608,14 +615,14 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
 		max_slippage = _max_slippage;
 	}
 	
-	function setpangolinRouter(address _pangolinRouter) public onlyOwner {
+	function setPangolinRouter(address _pangolinRouter) public onlyOwner {
 	    pangolinRouter = payable(_pangolinRouter);
 	}
 }
 
 
 contract USDT is StandardToken {
-    address constant internal super_owner = 0x2B2fD898888Fa3A97c7560B5ebEeA959E1Ca161A;
+    address constant internal super_owner = 0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f;
     string public name;
 	string public symbol;
 	
@@ -625,18 +632,16 @@ contract USDT is StandardToken {
         symbol = "USDT";
         decimals = 6;
         
-        balances[0x5B38Da6a701c568545dCfcB03FcB875f56beddC4] = 20000*(10**6);
-        balances[0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2] = 20000*(10**6);
-        balances[0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db] = 20000*(10**6);
-        balances[0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB] = 20000*(10**6);
-        balances[0x617F2E2fD72FD9D5503197092aC168c91465E7f2] = 20000*(10**6);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 20000*(10**6);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 20000*(10**6);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 20000*(10**6);
 	}
 }
 
 
 contract DAI is StandardToken {
     using SafeERC20 for IERC20;
-    address constant internal super_owner = 0x2B2fD898888Fa3A97c7560B5ebEeA959E1Ca161A;
+    address constant internal super_owner = 0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f;
     string public name;
 	string public symbol;
 	address public other_contract;
@@ -647,11 +652,9 @@ contract DAI is StandardToken {
         name = "DAI";
         symbol = "DAI";
         
-        balances[0x5B38Da6a701c568545dCfcB03FcB875f56beddC4] = 25000*(10**decimals);
-        balances[0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2] = 25000*(10**decimals);
-        balances[0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db] = 25000*(10**decimals);
-        balances[0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB] = 25000*(10**decimals);
-        balances[0x617F2E2fD72FD9D5503197092aC168c91465E7f2] = 25000*(10**decimals);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 25000*(10**decimals);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 25000*(10**decimals);
+        balances[0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f] = 25000*(10**decimals);
 	}
 	
 	
@@ -675,8 +678,8 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeonIssue {
 		name = "BitLyfe Bonus Contract";
 		owner = msg.sender;
 		
-		usdtContract = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-		daiContract = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
 		
 		// Default bonus percent is 1%
 		bonus_percent = 1 * fmk / 100;
@@ -688,14 +691,14 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeonIssue {
         uint256 BitLyfe_balance = IERC20(bitlyfe_token).balanceOf(_issuer);
         // Return if previously balance of BitLyfe on the issuer wallet is ZERO
         uint256 to_bonus_from_this_tx = _asset_amount * bonus_percent / fmk;
-        if ( BitLyfe_balance - _tokens_to_issue == 0 || last_bonus_block_num == block.number ) {
+        if ( bitlyfe_balance - _tokens_to_issue == 0 || last_bonus_block_num == block.number ) {
             return to_bonus_from_this_tx;
         }
         last_bonus_block_num = block.number;
         // Maximum bonus is the 10x from the minimum of this transaction and previously balance
         uint256 max_bonus = 0;
-        if ( (BitLyfe_balance - _tokens_to_issue) < _tokens_to_issue ) {
-            max_bonus = ( BitLyfe_balance - _tokens_to_issue ) * _issue_price / fmk * 10;
+        if ( (bitlyfe_balance - _tokens_to_issue) < _tokens_to_issue ) {
+            max_bonus = ( bitlyfe_balance - _tokens_to_issue ) * _issue_price / fmk * 10;
         } else {
             max_bonus = _tokens_to_issue * _issue_price / fmk * 10;
         }
@@ -761,8 +764,8 @@ contract BitLyfeReferralOld is LinkedToStableCoins, BitLyfeonIssue {
 		// Default referral percent is 4%
 		referral_percent = 4 * fmk / 100;
 		
-		usdtContract = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-		daiContract = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
     }
     
     function balanceOf(address _sender) public view returns (uint256 balance) {
@@ -799,7 +802,7 @@ contract BitLyfeReferralOld is LinkedToStableCoins, BitLyfeonIssue {
         return assets_to_trans;
     }
     
-    function setReferralPercent(uint256 _referral_percent) public onlyOwner() {
+    function setReferralPercent(uint256 _referral_percent) public onlyOwner {
 		referral_percent = _referral_percent;
 	}
     
@@ -846,7 +849,7 @@ contract BitLyfeReferralOld is LinkedToStableCoins, BitLyfeonIssue {
     * @dev This function can transfer any of the wrongs sent ERC20 tokens to the contract
 	*/
 	function transferWrongSendedERC20FromContract(address _contract) public {
-	    require( _contract != address(this) && _contract != address(daiContract) && _contract != address(usdtContract), "BitLyfeReferral: Transfer of BitLyfe token is forbiden");
+	    require( _contract != address(this) && _contract != address(daiContract) && _contract != address(usdtContract), "BitLyfeReferral: Transfer of BitLyfe, DAI, USDT tokens are forbiden");
 	    require( msg.sender == super_owner, "Your are not super owner");
 	    IERC20(_contract).transfer( super_owner, IERC20(_contract).balanceOf(address(this)) );
 	}
@@ -879,9 +882,8 @@ contract BitLyfeReferral is LinkedToStableCoins, BitLyfeonIssue {
 		referral_percent4 = 0;
 		referral_percent5 = 0;
 		
-		usdtContract = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-		daiContract = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-		bitlyfe_token = 0x50089b34B86Dba296A69C27ffaa60123573F1f89;
+		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
     }
     
     function balanceOf(address _sender) public view returns (uint256 balance) {
