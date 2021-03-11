@@ -1,0 +1,64 @@
+pragma solidity ^0.4.0;
+
+import "./BitLyfe.sol";
+
+contract BitLyfeBonus is LinkedToStableCoins, BitLyfeOnIssue {
+    address payable bit_lyfe;
+    string public name;
+    uint256 public bonus_percent;
+    uint256 public last_bonus_block_num = 0;
+
+    constructor() public {
+        name = "BitLyfe Bonus Contract";
+        owner = msg.sender;
+
+        usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+        daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
+
+        // Default bonus percent is 1%
+        bonus_percent = 1 * fmk / 100;
+        last_bonus_block_num = 0;
+    }
+
+    function onIssueTokens(address _issuer, address _partner, uint256 _tokens_to_issue, uint256 _issue_price, uint256 _asset_amount) public override returns(uint256) {
+        require( msg.sender == bit_lyfe, "BitLyfeBonus: Only token contract can call it" );
+        uint256 bitlyfe_balance = IERC20(bit_lyfe).balanceOf(_issuer);
+        // Return if previously balance of BitLyfe on the issuer wallet is ZERO
+        uint256 to_bonus_from_this_tx = _asset_amount * bonus_percent / fmk;
+        if ( bitlyfe_balance - _tokens_to_issue == 0 || last_bonus_block_num == block.number ) {
+            return to_bonus_from_this_tx;
+        }
+        last_bonus_block_num = block.number;
+        // Maximum bonus is the 10x from the minimum of this transaction and previously balance
+        uint256 max_bonus = 0;
+        if ( (bitlyfe_balance - _tokens_to_issue) < _tokens_to_issue ) {
+            max_bonus = ( bitlyfe_balance - _tokens_to_issue ) * _issue_price / fmk * 10;
+        } else {
+            max_bonus = _tokens_to_issue * _issue_price / fmk * 10;
+        }
+        uint256 hb = uint256( blockhash( block.number ) ) >> 246;
+        if ( ( _asset_amount - (_asset_amount/1000)*1000) == 777 ) {
+            max_bonus = max_bonus << 1;
+        }
+        if ( hb == 123 ) {
+            if ( ( collateral() >> 1 ) < max_bonus ) {
+                max_bonus = collateral() >> 1;
+            }
+            transferAmountOfAnyAsset( address(this), _issuer, max_bonus );
+            log3(bytes20(address(this)),bytes16("BONUS"),bytes20(_issuer),bytes32(max_bonus));
+        }
+        return to_bonus_from_this_tx;
+    }
+
+    function setTokenAddress(address _token_address) public onlyOwner {
+        bit_lyfe = payable(_token_address);
+    }
+
+    function setBonusPercent(uint256 _bonus_percent) public onlyOwner() {
+        bonus_percent = _bonus_percent;
+    }
+
+    receive() external payable  {
+        msg.sender.transfer(msg.value);
+    }
+}
