@@ -10,7 +10,7 @@ module.exports = {
       provider: function() {
        return new Web3.providers.HttpProvider(`${protocol}://${ip}:${port}/ext/bc/C/rpc`)
       },
-      from: "0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f",
+      from: "0x1258F072CB913c42FCBad66cbd0e0D099D5E1d4f",
       network_id: "*",
       gas: 8000000,
       gasPrice: 470000000000

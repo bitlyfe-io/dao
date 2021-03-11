@@ -1,4 +1,6 @@
-pragma solidity ^0.4.0;
+pragma solidity 0.6.11; // 5ef660b1
+
+// SPDX-License-Identifier: UNLICENSED
 
 import "./BitLyfe.sol";
 

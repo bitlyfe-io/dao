@@ -32,6 +32,7 @@ abstract contract ERC20 {
  * @dev ERC20 with allowance
  */
 abstract contract StandardToken is ERC20 {
+	bool public txFreeze;
 	using SafeMath for uint;
 	mapping(address => uint) public balances;
 	mapping (address => mapping (address => uint)) public allowed;
@@ -49,6 +50,7 @@ abstract contract StandardToken is ERC20 {
     * @param _value The amount to be transferred.
     */
 	function transfer(address _to, uint _value) override virtual public returns (bool) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		require( balances[msg.sender] >= _value, "Not enough amount on the source address");
 		balances[msg.sender] = balances[msg.sender].sub(_value);
 		balances[_to] = balances[_to].add(_value);
@@ -72,6 +74,7 @@ abstract contract StandardToken is ERC20 {
     * @param _value uint the amount of tokens to be transferred
     */
 	function transferFrom(address _from, address _to, uint _value) override virtual public returns (bool) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		uint _allowance = allowed[_from][msg.sender];
 		if (_from != msg.sender && _allowance != uint(-1)) {
 			require(_allowance>=_value,"Not enough allowed amount");
@@ -130,7 +133,7 @@ abstract contract LinkedToStableCoins {
 	uint256 constant public fmkd = 8;
 	uint256 constant public fmk = 10**fmkd;
 	uint256 constant internal _decimals = 8;
-	address constant internal super_owner = 0x1258f072cb913c42fcbad66cbd0e0d099d5e1d4f;
+	address constant internal super_owner = 0x1258F072CB913c42FCBad66cbd0e0D099D5E1d4f;
 	address internal owner;
 
 	address public usdtContract;
@@ -283,6 +286,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 
 		owner = msg.sender;
 
+		txFreeze = false;
+
 		// Initial Supply of BitLyfe is ZERO
 		_totalSupply = 0;
 		balances[address(this)] = _totalSupply;
@@ -310,6 +315,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     * @dev ERC20 transfer with burning of BitLyfe when it's sent to BitLyfe smart-contract
     */
 	function transfer(address _to, uint256 _value) public override returns (bool) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		require(_to != address(0),"Destination address can't be empty");
 		require(_value > 0,"Value for transfer should be more than zero");
 		return transferFrom( msg.sender, _to, _value);
@@ -319,6 +325,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     * @dev ERC20 transferFrom with burning of BitLyfe when it will be sent to the BitLyfe smart-contract
     */
 	function transferFrom(address _from, address _to, uint256 _value) public override returns (bool) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		require(_to != address(0),"Destination address can't be empty");
 		require(_value > 0,"Value for transfer should be more than zero");
 		bool res = false;
@@ -349,6 +356,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     * @dev Issue the BitLyfe tokens, recalc prices and hold ERC20 USDT or DAI on the smart-contract.
     */
 	function issueBitLyfeVsKnownAsset( address _token_contract, address _to_address, uint256 _asset_amount, address _partner, bool _need_transfer ) private returns (uint256) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		uint256 tokens_to_issue;
 		tokens_to_issue = tokenAmountToFixedAmount( _token_contract, _asset_amount ) * fmk / issue_price;
 		if ( _need_transfer ) {
@@ -388,6 +396,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	}
 
 	function issueBitLyfeVsERC20( address _erc20_contract, uint256 _max_slippage, uint256 _deadline, uint256 _erc20_asset_amount, address _partner) public returns (uint256){
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		require( _deadline == 0 || block.timestamp <= _deadline, "issueBitLyfeERC20: reverted because time is over" );
 		// Before issuing from USDT or DAI contracts you need to call approve(BITLYFE_CONTRACT_ADDRESS, AMOUNT) from your wallet
 		if ( _erc20_contract == usdtContract || _erc20_contract == daiContract ) {
@@ -420,7 +429,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	/**
     * @dev Burn the BitLyfe tokens when someone sends BitLyfe to the BitLyfe token smart-contract.
     */
-	function burnBitLyfeToERC20Private(address _erc20_contract, address _from_address, uint256 _tokens_to_burn) private returns (bool){
+	function burnBitLyfeToERC20Private(address _erc20_contract, address _from_address, uint256 _tokens_to_burn) private returns (bool) {
+		require(!txFreeze, "All TX's are frozen at the moment.");
 		require( _totalSupply >= _tokens_to_burn, "Not enough supply to burn");
 		require( _tokens_to_burn >= 1000, "Minimum amount of BitLyfe to burn is 0.00001 BitLyfe" );
 		uint256 contract_balance = collateral();
@@ -502,19 +512,15 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		msg.sender.transfer(msg.value);
 	}
 
-	function setOptionsContract(address _optionsContract, bool _enabled) public onlyOwner() {
-		optionsContracts[_optionsContract] = _enabled;
-	}
-
-	function setReferralProgramContract(address _referralProgramContract) public onlyOwner() {
+	function setReferralProgramContract(address _referralProgramContract) public onlyOwner {
 		referralProgramContract = _referralProgramContract;
 	}
 
-	function setBonusContract(address _bonusProgramContract) public onlyOwner() {
+	function setBonusContract(address _bonusProgramContract) public onlyOwner {
 		bonusProgramContract = _bonusProgramContract;
 	}
 
-	function setAssetsBalancer(address _assetsBalancer) public onlyOwner() {
+	function setAssetsBalancer(address _assetsBalancer) public onlyOwner {
 		assetsBalancer = _assetsBalancer;
 		// Allow to balancer contract make swap between assets
 		if ( IERC20(usdtContract).allowance(address(this),assetsBalancer) == 0 ) {
@@ -525,8 +531,16 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		}
 	}
 
-	function setPangolinRouter(address _pangolinRouter) public onlyOwner() {
+	function setPangolinRouter(address _pangolinRouter) public onlyOwner {
 		pangolinRouter = _pangolinRouter;
+	}
+
+	function freezeAllInteraction() public onlyOwner { 
+		txFreeze = true;
+	}
+
+	function unfreezeAllInteraction() public onlyOwner { 
+		txFreeze = false;
 	}
 }
 // SPDX-License-Identifier: UNLICENSED
