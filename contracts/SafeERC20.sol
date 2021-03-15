@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
 
-import "./Pangolin.sol";
+import "./PancakeRouter.sol";
 import "./SafeMath.sol";
 import "./Address.sol";
 

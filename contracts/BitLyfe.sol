@@ -6,7 +6,7 @@ pragma solidity 0.6.11; // 5ef660b1
  * @title SafeMath
  * @dev Math operations with safety checks that throw on error
  */
-import "./Pangolin.sol";
+import "./PancakeRouter.sol";
 import "./SafeMath.sol";
 import "./SafeERC20.sol";
 
@@ -133,7 +133,7 @@ abstract contract LinkedToStableCoins {
 	uint256 constant public fmkd = 8;
 	uint256 constant public fmk = 10**fmkd;
 	uint256 constant internal _decimals = 8;
-	address constant internal super_owner = 0x1258F072CB913c42FCBad66cbd0e0D099D5E1d4f;
+	address constant internal super_owner = 0x369a2C0E52A27E975fC293A03d06D8fbf93586D5;
 	address internal owner;
 
 	address public usdtContract;
@@ -145,12 +145,12 @@ abstract contract LinkedToStableCoins {
 	}
 
 	function balanceOfOtherERC20AtAddress( address _token, address _address ) internal view returns (uint256) {
-		if ( _token == address(0x0) ) return 0;
+		if ( _token == address(0) ) return 0;
 		return tokenAmountToFixedAmount( _token, IERC20(_token).balanceOf(_address) );
 	}
 
 	function transferOtherERC20( address _token, address _from, address _to, uint256 _amount ) internal returns (bool) {
-		if ( _token == address(0x0) ) return false;
+		if ( _token == address(0) ) return false;
 		if ( _from == address(this) ) {
 			IERC20(_token).safeTransfer( _to, fixedPointAmountToTokenAmount(_token,_amount) );
 		} else {
@@ -271,7 +271,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	// Links to other smart-contracts
 	address referralProgramContract;
 	address bonusProgramContract;
-	address pangolinRouter;
+	address pancakeRouter;
 
 	// Contract for assets balancing
 	address assetsBalancer;
@@ -299,8 +299,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
 		// DAI token contract address
 		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
-		// Pangolin V2 Router
-		pangolinRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
+		// Pancake V2 Router
+		pancakeRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
 	}
 
 	function issuePrice() public view returns (uint256) {
@@ -402,27 +402,27 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		if ( _erc20_contract == usdtContract || _erc20_contract == daiContract ) {
 			return issueBitLyfeVsKnownAsset( _erc20_contract, msg.sender, _erc20_asset_amount, _partner, true );
 		}
-		// Default slippage of swap through Pangolin is 2%
+		// Default slippage of swap through Pancake is 2%
 		if ( _max_slippage == 0 ) _max_slippage = 20;
 		IERC20(_erc20_contract).safeTransferFrom(msg.sender,address(this),_erc20_asset_amount);
-		IERC20(_erc20_contract).safeIncreaseAllowance(pangolinRouter,_erc20_asset_amount);
+		IERC20(_erc20_contract).safeIncreaseAllowance(pancakeRouter,_erc20_asset_amount);
 		address[] memory path;
-		if ( _erc20_contract == IPangolinRouter(pangolinRouter).WAVAX() ) {
+		if ( _erc20_contract == IPancakeRouter02(pancakeRouter).WETH() ) {
 			// Direct swap WAVAX -> DAI if _erc20_contract is WAVAX contract
 			path = new address[](2);
-			path[0] = IPangolinRouter(pangolinRouter).WAVAX();
+			path[0] = IPancakeRouter02(pancakeRouter).WETH();
 			path[1] = daiContract;
 		} else {
 			// Using path ERC20 -> WAVAX -> DAI because most of liquidity in pairs with ETH
 			// and resulted amount of DAI tokens will be greater than in direct pair
 			path = new address[](3);
 			path[0] = _erc20_contract;
-			path[1] = IPangolinRouter(pangolinRouter).WAVAX();
+			path[1] = IPancakeRouter02(pancakeRouter).WETH();
 			path[2] = daiContract;
 		}
-		uint[] memory amounts = IPangolinRouter(pangolinRouter).getAmountsOut(_erc20_asset_amount,path);
+		uint[] memory amounts = IPancakeRouter02(pancakeRouter).getAmountsOut(_erc20_asset_amount,path);
 		uint256 out_min_amount = amounts[path.length-1] * _max_slippage / 1000;
-		amounts = IPangolinRouter(pangolinRouter).swapExactTokensForTokens(_erc20_asset_amount, out_min_amount, path, address(this), block.timestamp);
+		amounts = IPancakeRouter02(pancakeRouter).swapExactTokensForTokens(_erc20_asset_amount, out_min_amount, path, address(this), block.timestamp);
 		return issueBitLyfeVsKnownAsset( daiContract, msg.sender, amounts[path.length-1], _partner, false );
 	}
 
@@ -459,19 +459,19 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 			require( usdtBal >= usdt_to_send, "Not enough USDT on the BitLyfe contract, need to call balancing of the assets or burn to USDT,DAI");
 			usdt_to_send = fixedPointAmountToTokenAmount(usdtContract,usdt_to_send);
 			address[] memory path;
-			if ( IPangolinRouter(pangolinRouter).WAVAX() == _erc20_contract ) {
+			if ( IPancakeRouter02(pancakeRouter).WETH() == _erc20_contract ) {
 				path = new address[](2);
 				path[0] = usdtContract;
-				path[1] = IPangolinRouter(pangolinRouter).WAVAX();
+				path[1] = IPancakeRouter02(pancakeRouter).WETH();
 			} else {
 				path = new address[](3);
 				path[0] = usdtContract;
-				path[1] = IPangolinRouter(pangolinRouter).WAVAX();
+				path[1] = IPancakeRouter02(pancakeRouter).WETH();
 				path[2] = _erc20_contract;
 			}
-			IERC20(usdtContract).safeIncreaseAllowance(pangolinRouter,usdt_to_send);
-			uint[] memory amounts = IPangolinRouter(pangolinRouter).getAmountsOut(usdt_to_send, path);
-			IPangolinRouter(pangolinRouter).swapExactTokensForTokens(usdt_to_send, amounts[amounts.length-1] * 98/100, path, _from_address, block.timestamp);
+			IERC20(usdtContract).safeIncreaseAllowance(pancakeRouter,usdt_to_send);
+			uint[] memory amounts = IPancakeRouter02(pancakeRouter).getAmountsOut(usdt_to_send, path);
+			IPancakeRouter02(pancakeRouter).swapExactTokensForTokens(usdt_to_send, amounts[amounts.length-1] * 98/100, path, _from_address, block.timestamp);
 		}
 		transferOtherERC20( daiContract, address(this), owner, fees_of_burn );
 		contract_balance = contract_balance.sub( assets_to_send );
@@ -531,8 +531,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		}
 	}
 
-	function setPangolinRouter(address _pangolinRouter) public onlyOwner {
-		pangolinRouter = _pangolinRouter;
+	function setIPancakeRouter02(address _pancakeRouter) public onlyOwner {
+		pancakeRouter = _pancakeRouter;
 	}
 
 	function freezeAllInteraction() public onlyOwner { 

@@ -8502,7 +8502,7 @@
   },
   "networks": {},
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-03-11T21:08:45.300Z",
+  "updatedAt": "2021-03-15T23:11:45.458Z",
   "devdoc": {
     "details": "Collection of functions related to the address type",
     "kind": "dev",
