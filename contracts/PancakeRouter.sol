@@ -1,5 +1,7 @@
 pragma solidity =0.6.11;
 
+// SPDX-License-Identifier: UNLICENSED
+
 import "./SafeMath.sol";
 
 

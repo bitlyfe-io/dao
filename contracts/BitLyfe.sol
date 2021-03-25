@@ -292,15 +292,15 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		_totalSupply = 0;
 		balances[address(this)] = _totalSupply;
 
-		// Initial issue price of BitLyfe is 1 USDT or DAI per 1.0 BitLyfe
-		issue_price = 1 * fmk;
+		// Initial issue price of BitLyfe is .01 USDT or DAI per 1.0 BitLyfe
+		issue_price = 100 * fmk;
 
 		// USDT token contract address
-		usdtContract = 0xde3A24028580884448a5397872046a019649b084;
+		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
 		// DAI token contract address
-		daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
+		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 		// Pancake V2 Router
-		pancakeRouter = 0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106;
+		pancakeRouter = 0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F;
 	}
 
 	function issuePrice() public view returns (uint256) {
@@ -535,12 +535,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		pancakeRouter = _pancakeRouter;
 	}
 
-	function freezeAllInteraction() public onlyOwner { 
-		txFreeze = true;
-	}
-
-	function unfreezeAllInteraction() public onlyOwner { 
-		txFreeze = false;
+	function freezeAllInteraction(bool _txFreeze) public onlyOwner { 
+		txFreeze = _txFreeze;
 	}
 }
 // SPDX-License-Identifier: UNLICENSED

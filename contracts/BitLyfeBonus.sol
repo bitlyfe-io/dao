@@ -13,9 +13,14 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeOnIssue {
     constructor() public {
         name = "BitLyfe Bonus Contract";
         owner = msg.sender;
+        
+        //BitLyfe Token Aaddress
+        bit_lyfe = 0x84e8aDef529466a213E5E0894FAB7F48599708D3;
 
-        usdtContract = 0xde3A24028580884448a5397872046a019649b084;
-        daiContract = 0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a;
+		// USDT token contract address
+		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+		// DAI token contract address
+		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 
         // Default bonus percent is 1%
         bonus_percent = 1 * fmk / 100;
