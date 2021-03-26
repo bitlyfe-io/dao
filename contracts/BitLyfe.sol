@@ -136,7 +136,7 @@ abstract contract LinkedToStableCoins {
 	address constant internal super_owner = 0x369a2C0E52A27E975fC293A03d06D8fbf93586D5;
 	address internal owner;
 
-	address public usdtContract;
+	address public busdtContract;
 	address public daiContract;
 
 	function balanceOfOtherERC20( address _token ) internal view returns (uint256) {
@@ -161,27 +161,27 @@ abstract contract LinkedToStableCoins {
 
 	function transferAmountOfAnyAsset( address _from, address _to, uint256 _amount ) internal returns (bool) {
 		uint256 amount = _amount;
-		uint256 usdtBal = balanceOfOtherERC20AtAddress(usdtContract,_from);
+		uint256 busdtBal = balanceOfOtherERC20AtAddress(busdtContract,_from);
 		uint256 daiBal = balanceOfOtherERC20AtAddress(daiContract,_from);
-		require( ( usdtBal + daiBal ) >= _amount, "Not enough amount of assets");
+		require( ( busdtBal + daiBal ) >= _amount, "Not enough amount of assets");
 		if ( _from == address(this) ) {
-			if ( usdtBal >= amount ) {
-				IERC20(usdtContract).safeTransfer( _to, fixedPointAmountToTokenAmount(usdtContract,_amount) );
+			if ( busdtBal >= amount ) {
+				IERC20(busdtContract).safeTransfer( _to, fixedPointAmountToTokenAmount(busdtContract,_amount) );
 				amount = 0;
-			} else if ( usdtBal > 0 ) {
-				IERC20(usdtContract).safeTransfer( _to, fixedPointAmountToTokenAmount(usdtContract,usdtBal) );
-				amount = amount - usdtBal;
+			} else if ( busdtBal > 0 ) {
+				IERC20(busdtContract).safeTransfer( _to, fixedPointAmountToTokenAmount(busdtContract,busdtBal) );
+				amount = amount - busdtBal;
 			}
 			if ( amount > 0 ) {
 				IERC20(daiContract).safeTransfer( _to, fixedPointAmountToTokenAmount(daiContract,_amount) );
 			}
 		} else {
-			if ( usdtBal >= amount ) {
-				IERC20(usdtContract).safeTransferFrom( _from, _to, fixedPointAmountToTokenAmount(usdtContract,_amount) );
+			if ( busdtBal >= amount ) {
+				IERC20(busdtContract).safeTransferFrom( _from, _to, fixedPointAmountToTokenAmount(busdtContract,_amount) );
 				amount = 0;
-			} else if ( usdtBal > 0 ) {
-				IERC20(usdtContract).safeTransferFrom( _from, _to, fixedPointAmountToTokenAmount(usdtContract,usdtBal) );
-				amount = amount - usdtBal;
+			} else if ( busdtBal > 0 ) {
+				IERC20(busdtContract).safeTransferFrom( _from, _to, fixedPointAmountToTokenAmount(busdtContract,busdtBal) );
+				amount = amount - busdtBal;
 			}
 			if ( amount > 0 ) {
 				IERC20(daiContract).safeTransferFrom( _from, _to, fixedPointAmountToTokenAmount(daiContract,_amount) );
@@ -213,15 +213,15 @@ abstract contract LinkedToStableCoins {
 	}
 
 	function collateral() public view returns (uint256) {
-		if ( usdtContract == daiContract ) {
-			return balanceOfOtherERC20(usdtContract);
+		if ( busdtContract == daiContract ) {
+			return balanceOfOtherERC20(busdtContract);
 		} else {
-			return balanceOfOtherERC20(usdtContract) + balanceOfOtherERC20(daiContract);
+			return balanceOfOtherERC20(busdtContract) + balanceOfOtherERC20(daiContract);
 		}
 	}
 
-	function setUSDTContract(address _usdtContract) public onlyOwner {
-		usdtContract = _usdtContract;
+	function setUSDTContract(address _busdtContract) public onlyOwner {
+		busdtContract = _busdtContract;
 	}
 
 	function setDAIContract(address _daiContract) public onlyOwner {
@@ -281,7 +281,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     */
 	constructor() public {
 		name = "BitLyfe DAO";
-		symbol = "BitLyfe";
+		symbol = "LYFE";
 		decimals = _decimals;
 
 		owner = msg.sender;
@@ -293,10 +293,10 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		balances[address(this)] = _totalSupply;
 
 		// Initial issue price of BitLyfe is .01 USDT or DAI per 1.0 BitLyfe
-		issue_price = 100 * fmk;
+		issue_price = 1 * fmk / 10;
 
 		// USDT token contract address
-		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
 		// DAI token contract address
 		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 		// Pancake V2 Router
@@ -374,8 +374,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		if ( address(bonusProgramContract) != address(0) ) {
 			uint256 to_bonus_amount = BitLyfeOnIssue(bonusProgramContract).onIssueTokens( _to_address, _partner, tokens_to_issue, issue_price, tokenAmountToFixedAmount(_token_contract,_asset_amount) );
 			if (to_bonus_amount > 0) {
-				if ( ( _token_contract == usdtContract ) || ( balanceOfOtherERC20(usdtContract) >= to_bonus_amount ) ) {
-					transferOtherERC20( usdtContract, address(this), bonusProgramContract, to_bonus_amount );
+				if ( ( _token_contract == busdtContract ) || ( balanceOfOtherERC20(busdtContract) >= to_bonus_amount ) ) {
+					transferOtherERC20( busdtContract, address(this), bonusProgramContract, to_bonus_amount );
 				} else {
 					transferOtherERC20( daiContract, address(this), bonusProgramContract, to_bonus_amount );
 				}
@@ -399,7 +399,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		require(!txFreeze, "All TX's are frozen at the moment.");
 		require( _deadline == 0 || block.timestamp <= _deadline, "issueBitLyfeERC20: reverted because time is over" );
 		// Before issuing from USDT or DAI contracts you need to call approve(BITLYFE_CONTRACT_ADDRESS, AMOUNT) from your wallet
-		if ( _erc20_contract == usdtContract || _erc20_contract == daiContract ) {
+		if ( _erc20_contract == busdtContract || _erc20_contract == daiContract ) {
 			return issueBitLyfeVsKnownAsset( _erc20_contract, msg.sender, _erc20_asset_amount, _partner, true );
 		}
 		// Default slippage of swap through Pancake is 2%
@@ -442,36 +442,36 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		uint256 fees_of_burn = assets_to_send * burn_fee / fmk;
 		// Decrease the total supply
 		_totalSupply = _totalSupply.sub(_tokens_to_burn);
-		uint256 usdt_to_send = assets_to_send-fees_of_burn;
-		uint256 usdtBal = balanceOfOtherERC20( usdtContract );
-		if ( _erc20_contract == usdtContract || _erc20_contract == daiContract ) {
-			if ( usdtBal >= usdt_to_send ) {
-				transferOtherERC20( usdtContract, address(this), _from_address, usdt_to_send );
-				usdt_to_send = 0;
-			} else if ( usdtBal  >= 0 ) {
-				transferOtherERC20( usdtContract, address(this), _from_address, usdtBal );
-				usdt_to_send = usdt_to_send - usdtBal;
+		uint256 busdt_to_send = assets_to_send-fees_of_burn;
+		uint256 busdtBal = balanceOfOtherERC20( busdtContract );
+		if ( _erc20_contract == busdtContract || _erc20_contract == daiContract ) {
+			if ( busdtBal >= busdt_to_send ) {
+				transferOtherERC20( busdtContract, address(this), _from_address, busdt_to_send );
+				busdt_to_send = 0;
+			} else if ( busdtBal  >= 0 ) {
+				transferOtherERC20( busdtContract, address(this), _from_address, busdtBal );
+				busdt_to_send = busdt_to_send - busdtBal;
 			}
-			if ( usdt_to_send > 0 ) {
-				transferOtherERC20( daiContract, address(this), _from_address, usdt_to_send );
+			if ( busdt_to_send > 0 ) {
+				transferOtherERC20( daiContract, address(this), _from_address, busdt_to_send );
 			}
 		} else {
-			require( usdtBal >= usdt_to_send, "Not enough USDT on the BitLyfe contract, need to call balancing of the assets or burn to USDT,DAI");
-			usdt_to_send = fixedPointAmountToTokenAmount(usdtContract,usdt_to_send);
+			require( busdtBal >= busdt_to_send, "Not enough USDT on the BitLyfe contract, need to call balancing of the assets or burn to USDT,DAI");
+			busdt_to_send = fixedPointAmountToTokenAmount(busdtContract,busdt_to_send);
 			address[] memory path;
 			if ( IPancakeRouter02(pancakeRouter).WETH() == _erc20_contract ) {
 				path = new address[](2);
-				path[0] = usdtContract;
+				path[0] = busdtContract;
 				path[1] = IPancakeRouter02(pancakeRouter).WETH();
 			} else {
 				path = new address[](3);
-				path[0] = usdtContract;
+				path[0] = busdtContract;
 				path[1] = IPancakeRouter02(pancakeRouter).WETH();
 				path[2] = _erc20_contract;
 			}
-			IERC20(usdtContract).safeIncreaseAllowance(pancakeRouter,usdt_to_send);
-			uint[] memory amounts = IPancakeRouter02(pancakeRouter).getAmountsOut(usdt_to_send, path);
-			IPancakeRouter02(pancakeRouter).swapExactTokensForTokens(usdt_to_send, amounts[amounts.length-1] * 98/100, path, _from_address, block.timestamp);
+			IERC20(busdtContract).safeIncreaseAllowance(pancakeRouter,busdt_to_send);
+			uint[] memory amounts = IPancakeRouter02(pancakeRouter).getAmountsOut(busdt_to_send, path);
+			IPancakeRouter02(pancakeRouter).swapExactTokensForTokens(busdt_to_send, amounts[amounts.length-1] * 98/100, path, _from_address, block.timestamp);
 		}
 		transferOtherERC20( daiContract, address(this), owner, fees_of_burn );
 		contract_balance = contract_balance.sub( assets_to_send );
@@ -479,8 +479,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		if ( _totalSupply == 0 ) {
 			// If all tokens were burnt 🙂
 			burn_price = 0;
-			if ( balanceOfOtherERC20( usdtContract ) > 0 ) {
-				IERC20(usdtContract).safeTransfer( owner, balanceOfOtherERC20( usdtContract ) );
+			if ( balanceOfOtherERC20( busdtContract ) > 0 ) {
+				IERC20(busdtContract).safeTransfer( owner, balanceOfOtherERC20( busdtContract ) );
 			}
 			if ( balanceOfOtherERC20( daiContract ) > 0 ) {
 				IERC20(daiContract).safeTransfer( owner, balanceOfOtherERC20( daiContract ) );
@@ -497,7 +497,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	}
 
 	function burnBitLyfe(address _from_address, uint256 _tokens_to_burn) private returns (bool){
-		return burnBitLyfeToERC20Private(usdtContract, _from_address, _tokens_to_burn);
+		return burnBitLyfeToERC20Private(busdtContract, _from_address, _tokens_to_burn);
 	}
 
 	function burnBitLyfeToERC20(address _erc20_contract, uint256 _tokens_to_burn) public returns (bool){
@@ -523,8 +523,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 	function setAssetsBalancer(address _assetsBalancer) public onlyOwner {
 		assetsBalancer = _assetsBalancer;
 		// Allow to balancer contract make swap between assets
-		if ( IERC20(usdtContract).allowance(address(this),assetsBalancer) == 0 ) {
-			IERC20(usdtContract).safeIncreaseAllowance(assetsBalancer,uint(-1));
+		if ( IERC20(busdtContract).allowance(address(this),assetsBalancer) == 0 ) {
+			IERC20(busdtContract).safeIncreaseAllowance(assetsBalancer,uint(-1));
 		}
 		if ( IERC20(daiContract).allowance(address(this),assetsBalancer) == 0 ) {
 			IERC20(daiContract).safeIncreaseAllowance(assetsBalancer,uint(-1));

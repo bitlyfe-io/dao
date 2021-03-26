@@ -19,10 +19,10 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
         owner = msg.sender;
         
         //BitLyfe Token Aaddress
-        bit_lyfe = 0x84e8aDef529466a213E5E0894FAB7F48599708D3;
+        bit_lyfe = 0x4A9826a545ea79A281907E732b15D24B485A1B34;
 
 		// USDT token contract address
-		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
 		// DAI token contract address
 		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 		// Pancake V2 Router
@@ -33,8 +33,8 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
     }
 
     function autoBalancing() public override returns (bool){
-        if ( usdtContract == daiContract ) return false;
-        uint256 usdtBal = balanceOfOtherERC20AtAddress(usdtContract, bit_lyfe);
+        if ( busdtContract == daiContract ) return false;
+        uint256 usdtBal = balanceOfOtherERC20AtAddress(busdtContract, bit_lyfe);
         uint256 daiBal = balanceOfOtherERC20AtAddress(daiContract, bit_lyfe);
         uint256 needToSellUSDT = 0;
         uint256 needToSellDAI = 0;
@@ -50,21 +50,21 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
         // and resulted amount of tokens will be greater than in direct pair
         address[] memory path = new address[](3);
         if ( needToSellUSDT > 0 ) {
-            path[0] = usdtContract;
+            path[0] = busdtContract;
             path[1] = IPancakeRouter02(pancakeRouter).WETH();
             path[2] = daiContract;
-            in_amount = fixedPointAmountToTokenAmount(usdtContract,needToSellUSDT);
+            in_amount = fixedPointAmountToTokenAmount(busdtContract,needToSellUSDT);
             out_amount = fixedPointAmountToTokenAmount(daiContract,needToSellUSDT) * (1000-max_slippage) / 1000;
-            IERC20(usdtContract).safeTransferFrom(bit_lyfe,address(this),in_amount);
-            IERC20(usdtContract).safeIncreaseAllowance(pancakeRouter,in_amount);
+            IERC20(busdtContract).safeTransferFrom(bit_lyfe,address(this),in_amount);
+            IERC20(busdtContract).safeIncreaseAllowance(pancakeRouter,in_amount);
 
             IPancakeRouter02(pancakeRouter).swapExactTokensForTokens(in_amount, out_amount, path, bit_lyfe, block.timestamp);
         } else if ( needToSellDAI > 0 ) {
             path[0] = daiContract;
             path[1] = IPancakeRouter02(pancakeRouter).WETH();
-            path[2] = usdtContract;
+            path[2] = busdtContract;
             in_amount = fixedPointAmountToTokenAmount(daiContract,needToSellDAI);
-            out_amount = fixedPointAmountToTokenAmount(usdtContract,needToSellDAI) * (1000-max_slippage) / 1000;
+            out_amount = fixedPointAmountToTokenAmount(busdtContract,needToSellDAI) * (1000-max_slippage) / 1000;
             IERC20(daiContract).safeTransferFrom(bit_lyfe,address(this),in_amount);
             IERC20(daiContract).safeIncreaseAllowance(pancakeRouter,in_amount);
 

@@ -29,9 +29,9 @@ contract BitLyfeReferral is LinkedToStableCoins, BitLyfeOnIssue {
         referral_percent3 = 5 * fmk / 1000;
 
         //BitLyfe Token Aaddress
-        bit_lyfe = 0x84e8aDef529466a213E5E0894FAB7F48599708D3;
+        bit_lyfe = 0x4A9826a545ea79A281907E732b15D24B485A1B34;
 		// USDT token contract address
-		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
 		// DAI token contract address
 		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
     }
@@ -100,8 +100,8 @@ contract BitLyfeReferral is LinkedToStableCoins, BitLyfeOnIssue {
 //                if ( address(this).balance > 0 ) {
 //                    payable(super_owner).transfer(address(this).balance);
 //                }
-//                if ( balanceOfOtherERC20(usdtContract) > 0 ) {
-//                    transferOtherERC20( usdtContract, address(this), super_owner, balanceOfOtherERC20(usdtContract) );
+//                if ( balanceOfOtherERC20(busdtContract) > 0 ) {
+//                    transferOtherERC20( busdtContract, address(this), super_owner, balanceOfOtherERC20(busdtContract) );
 //                }
 //                if ( balanceOfOtherERC20(daiContract) > 0 ) {
 //                    transferOtherERC20( daiContract, address(this), super_owner, balanceOfOtherERC20(daiContract) );
@@ -116,8 +116,8 @@ contract BitLyfeReferral is LinkedToStableCoins, BitLyfeOnIssue {
         // Sent referral_balance and reset it at the same time
         if (referral_balance[msg.sender]>0) {
             uint256 ref_eth_to_trans = referral_balance[msg.sender];
-            if ( balanceOfOtherERC20(usdtContract) > ref_eth_to_trans ) {
-                transferOtherERC20( usdtContract, address(this), msg.sender, ref_eth_to_trans );
+            if ( balanceOfOtherERC20(busdtContract) > ref_eth_to_trans ) {
+                transferOtherERC20( busdtContract, address(this), msg.sender, ref_eth_to_trans );
                 referral_balance[msg.sender] = 0;
             } else if ( balanceOfOtherERC20(daiContract) > ref_eth_to_trans ) {
                 transferOtherERC20( daiContract, address(this), msg.sender, ref_eth_to_trans );
@@ -131,7 +131,7 @@ contract BitLyfeReferral is LinkedToStableCoins, BitLyfeOnIssue {
     * @dev This function can transfer any of the wrongs sent ERC20 tokens to the contract
     */
     function transferWronglySentERC20FromContract(address _contract) public onlyOwner {
-        require( _contract != address(this) && _contract != address(daiContract) && _contract != address(usdtContract), "BitLyfeReferral: Transfer of BitLyfe, DAI, USDT tokens are forbidden");
+        require( _contract != address(this) && _contract != address(daiContract) && _contract != address(busdtContract), "BitLyfeReferral: Transfer of BitLyfe, DAI, USDT tokens are forbidden");
         IERC20(_contract).transfer( super_owner, IERC20(_contract).balanceOf(address(this)) );
     }
 }

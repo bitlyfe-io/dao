@@ -15,10 +15,10 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeOnIssue {
         owner = msg.sender;
         
         //BitLyfe Token Aaddress
-        bit_lyfe = 0x84e8aDef529466a213E5E0894FAB7F48599708D3;
+        bit_lyfe = 0x4A9826a545ea79A281907E732b15D24B485A1B34;
 
 		// USDT token contract address
-		usdtContract = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
 		// DAI token contract address
 		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 
