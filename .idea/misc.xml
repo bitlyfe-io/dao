@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_13" project-jdk-name="13" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="SbtLocalSettings">
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$/../../Blockchain/Bounty0x/LatestAPISet/apigateway" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../../Software/play-java-rest-api-example" value="PREVIEW" />
+        <entry key="$USER_HOME$/Downloads/play-java-rest-api-example" value="PREVIEW" />
+      </map>
+    </option>
+  </component>
+  <component name="ScalaSbtSettings">
+    <option name="customVMEnabled" value="true" />
+    <option name="customVMPath" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home" />
+  </component>
+</project>

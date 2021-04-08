@@ -281,7 +281,7 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
     */
 	constructor() public {
 		name = "BitLyfe DAO";
-		symbol = "LYFE";
+		symbol = "LYF";
 		decimals = _decimals;
 
 		owner = msg.sender;
@@ -293,8 +293,8 @@ contract BitLyfe is LinkedToStableCoins, StandardToken {
 		balances[address(this)] = _totalSupply;
 
 		// Initial issue price of BitLyfe is .01 USDT or DAI per 1.0 BitLyfe
-		issue_price = 1 * fmk / 10;
-
+		issue_price = 1 * fmk / 100;
+		
 		// USDT token contract address
 		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
 		// DAI token contract address

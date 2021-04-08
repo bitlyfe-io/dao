@@ -4,9 +4,17 @@ const protocol = "http";
 const ip = "localhost";
 const port = 9650;
 const mnemonic = "cb269e5b4f23848413c30a3bcf6735064b4204ddcb055a0ca81f4b218c6c1f00";
+const ganache_mnemonic = "gain notice regular mean bitter divorce arrest middle junior unaware enroll host";
 
 module.exports = {
   networks: {
+    local: {
+      provider: () => new HDWalletProvider(ganache_mnemonic, `http://localhost:9650`),
+      from: "0xe25Dfb63b97fD6911a14A4767D278FacF198C4a4",
+      network_id: 5777,
+      gasPrice: 20000000000,
+      skipDryRun: true
+    },
     avax_testnet: {
       provider: function() {
        return new Web3.providers.HttpProvider(`${protocol}://${ip}:${port}/ext/bc/C/rpc`)
