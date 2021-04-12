@@ -15,7 +15,7 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeOnIssue {
         owner = msg.sender;
         
         //BitLyfe Token Aaddress
-        bit_lyfe = 0x4A9826a545ea79A281907E732b15D24B485A1B34;
+        bit_lyfe = 0xFBCaE026E166162FD5860711e9082DA6383243F5;
 
 		// USDT token contract address
 		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
@@ -23,7 +23,7 @@ contract BitLyfeBonus is LinkedToStableCoins, BitLyfeOnIssue {
 		daiContract = 0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3;
 
         // Default bonus percent is 1%
-        bonus_percent = 1 * fmk / 100;
+        bonus_percent = 2 * fmk / 100;
         last_bonus_block_num = 0;
     }
 

@@ -19,7 +19,7 @@ contract BitLyfeAssetsBalancer is abstractBitLyfeAssetsBalancer, LinkedToStableC
         owner = msg.sender;
         
         //BitLyfe Token Aaddress
-        bit_lyfe = 0x4A9826a545ea79A281907E732b15D24B485A1B34;
+        bit_lyfe = 0xFBCaE026E166162FD5860711e9082DA6383243F5;
 
 		// USDT token contract address
 		busdtContract = 0x55d398326f99059fF775485246999027B3197955;
